@@ -12,13 +12,6 @@ public class RequestMessage implements Request {
 
 	public RequestMessage(ArrayList<String> requestString) {
 		String[] firstLine = requestString.get(0).split(" ");
-		int curLine = 1;
-		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
-			if ((requestString.get(curLine) != null) && (requestString.get(curLine).trim().length() != 0)) {
-				HeaderParameter current = new HeaderParameter(requestString.get(curLine));
-				this.headerParameters.add(current);
-			}
-		}
 		String method = firstLine[0];
 		String[] resourcePathWithParams = firstLine[1].split("\\?");
 		if (method.equals("GET")) {
@@ -33,6 +26,18 @@ public class RequestMessage implements Request {
 		// Will not handle spaces in paths gracefully, shouldn't have to (%20).
 		this.resourcePath = resourcePathWithParams[0];
 
+		int curLine = 1;
+		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
+			if ((requestString.get(curLine) != null) && (requestString.get(curLine).trim().length() != 0)) {
+				try {
+					HeaderParameter current = new HeaderParameter(requestString.get(curLine));
+					this.headerParameters.add(current);
+				} catch (RuntimeException ex) {
+					System.out.println("Probably malformed header parameter.");
+				}
+			}
+		}
+
 		int contentStartLine = curLine + 1;
 		String contentLengthStr = null;
 		try {
@@ -40,21 +45,25 @@ public class RequestMessage implements Request {
 		} catch (RuntimeException re) {
 
 		}
+		String[] params = new String[0];
 		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
 		if (this.httpMethod == HttpMethod.GET) {
 			if (resourcePathWithParams.length == 2) {
-				String[] params = resourcePathWithParams[1].split("&");
-				for (String p : params) {
-					this.parameters.add(new Parameter(p));
-				}
+				params = resourcePathWithParams[1].split("&");
+
 			}
-		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength != -1)) {
+		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength > 0)) {
 			if (requestString.get(contentStartLine).length() != contentLength) {
 				throw new RuntimeException("Size mismatch between declared content length and actual content length.");
 			}
-			String[] params = requestString.get(contentStartLine).split("&");
-			for (String p : params) {
-				this.parameters.add(new Parameter(p));
+			params = requestString.get(contentStartLine).split("&");
+		}
+		for (String p : params) {
+			try {
+				Parameter current = new Parameter(p);
+				this.parameters.add(current);
+			} catch (RuntimeException ex) {
+				System.out.println("Probably malformed parameter.");
 			}
 		}
 	}
