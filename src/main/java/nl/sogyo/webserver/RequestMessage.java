@@ -1,16 +1,16 @@
 package nl.sogyo.webserver;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RequestMessage implements Request {
 
 	private HttpMethod httpMethod;
 	private String resourcePath;
+	private List<HeaderParameter> headerParameters = new ArrayList<>();
 
-	public RequestMessage(BufferedReader request) throws IOException {
-		String[] firstLine = request.readLine().split(" ");
+	public RequestMessage(ArrayList<String> requestString) {
+		String[] firstLine = requestString.get(0).split(" ");
 		String method = firstLine[0];
 		if (method.equals("GET")) {
 			this.httpMethod = HttpMethod.GET;
@@ -23,6 +23,11 @@ public class RequestMessage implements Request {
 		}
 		// Will not handle spaces in paths gracefully.
 		this.resourcePath = firstLine[1];
+		for (int i = 1; i < requestString.size(); i++) {
+			if ((requestString.get(i) != null) && (requestString.get(i).length() != 0)) {
+				this.headerParameters.add(new HeaderParameter(requestString.get(i)));
+			}
+		}
 	}
 
 	@Override
@@ -37,14 +42,21 @@ public class RequestMessage implements Request {
 
 	@Override
 	public List<String> getHeaderParameterNames() {
-		// TODO Auto-generated method stub
-		return null;
+		List<String> names = new ArrayList<>();
+		for (HeaderParameter hp : this.headerParameters) {
+			names.add(hp.getName());
+		}
+		return names;
 	}
 
 	@Override
 	public String getHeaderParameterValue(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		for (HeaderParameter hp : this.headerParameters) {
+			if (hp.getName().equals(name)) {
+				return hp.getValue();
+			}
+		}
+		throw new RuntimeException("No such header parameter found.");
 	}
 
 	@Override
