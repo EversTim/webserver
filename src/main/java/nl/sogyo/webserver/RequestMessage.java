@@ -4,12 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
-public class HttpRequest implements Request {
+public class RequestMessage implements Request {
 
 	private HttpMethod httpMethod;
 	private String resourcePath;
 
-	public HttpRequest(BufferedReader request) throws IOException {
+	public RequestMessage(BufferedReader request) throws IOException {
 		String[] firstLine = request.readLine().split(" ");
 		String method = firstLine[0];
 		if (method.equals("GET")) {

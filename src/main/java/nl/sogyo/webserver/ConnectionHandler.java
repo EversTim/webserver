@@ -15,16 +15,18 @@ public class ConnectionHandler implements Runnable {
 	public void run() {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-			HttpRequest request;
+			RequestMessage request;
 			try {
-				request = new HttpRequest(reader);
+				request = new RequestMessage(reader);
 			} catch (IOException ie) {
 				return;
 			}
+			String responseMessage = String.format(
+					"<html>\n<body>\nYou did an HTTP %1$S request.<br />\n You requested the following resource: %2$s.\n</body>\n</html>",
+					request.getHTTPMethod().toString(), request.getResourcePath());
+			ResponseMessage message = new ResponseMessage(HttpStatusCode.OK, responseMessage);
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
-			writer.write(
-					String.format("You did an HTTP %1$S request and you requested the following resource: %2$s.\r\n",
-							request.getHTTPMethod().toString(), request.getResourcePath()));
+			writer.write(message.toString());
 			writer.flush();
 			this.socket.close();
 		} catch (IOException e) {
