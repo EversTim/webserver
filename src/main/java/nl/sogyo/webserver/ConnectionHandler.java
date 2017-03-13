@@ -23,6 +23,13 @@ public class ConnectionHandler implements Runnable {
 				incomingMessage.add(line);
 				line = reader.readLine();
 			}
+			incomingMessage.add("");
+			StringBuilder body = new StringBuilder();
+			while (reader.ready()) {
+				int read = reader.read();
+				body.append((char) read);
+			}
+			incomingMessage.add(body.toString());
 			RequestMessage request = new RequestMessage(incomingMessage);
 			String responseMessage = generateResponseMessage(request);
 			ResponseMessage message = new ResponseMessage(HttpStatusCode.OK, responseMessage);
@@ -42,11 +49,22 @@ public class ConnectionHandler implements Runnable {
 				"You did an HTTP %1$S request.<br />\n You requested the following resource: %2$s.<br />\n",
 				request.getHTTPMethod().toString(), request.getResourcePath()));
 		responseMessage.append("<br />\n");
-		responseMessage.append("The following header parameters were passed:<br />\n");
-		List<String> names = request.getHeaderParameterNames();
-		for (String name : names) {
-			responseMessage.append(name + ": " + request.getHeaderParameterValue(name) + "<br />\n");
+		List<String> headerParamNames = request.getHeaderParameterNames();
+		if (headerParamNames.size() != 0) {
+			responseMessage.append("The following header parameters were passed:<br />\n");
+			for (String name : headerParamNames) {
+				responseMessage.append(name + ": " + request.getHeaderParameterValue(name) + "<br />\n");
+			}
+			responseMessage.append("<br />\n");
 		}
+		List<String> paramName = request.getParameterNames();
+		if (paramName.size() != 0) {
+			responseMessage.append("The following parameters were passed:<br />\n");
+			for (String name : paramName) {
+				responseMessage.append(name + ": " + request.getParameterValue(name) + "<br />\n");
+			}
+		}
+
 		responseMessage.append("</body>\n</html>\n");
 		return responseMessage.toString();
 	}

@@ -8,10 +8,19 @@ public class RequestMessage implements Request {
 	private HttpMethod httpMethod;
 	private String resourcePath;
 	private List<HeaderParameter> headerParameters = new ArrayList<>();
+	private List<Parameter> parameters = new ArrayList<>();
 
 	public RequestMessage(ArrayList<String> requestString) {
 		String[] firstLine = requestString.get(0).split(" ");
+		int curLine = 1;
+		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
+			if ((requestString.get(curLine) != null) && (requestString.get(curLine).trim().length() != 0)) {
+				HeaderParameter current = new HeaderParameter(requestString.get(curLine));
+				this.headerParameters.add(current);
+			}
+		}
 		String method = firstLine[0];
+		String[] resourcePathWithParams = firstLine[1].split("\\?");
 		if (method.equals("GET")) {
 			this.httpMethod = HttpMethod.GET;
 		} else if (method.equals("POST")) {
@@ -21,11 +30,31 @@ public class RequestMessage implements Request {
 			// something like that.
 			throw new RuntimeException("Malformed request.");
 		}
-		// Will not handle spaces in paths gracefully.
-		this.resourcePath = firstLine[1];
-		for (int i = 1; i < requestString.size(); i++) {
-			if ((requestString.get(i) != null) && (requestString.get(i).length() != 0)) {
-				this.headerParameters.add(new HeaderParameter(requestString.get(i)));
+		// Will not handle spaces in paths gracefully, shouldn't have to (%20).
+		this.resourcePath = resourcePathWithParams[0];
+
+		int contentStartLine = curLine + 1;
+		String contentLengthStr = null;
+		try {
+			contentLengthStr = this.getHeaderParameterValue("Content-Length");
+		} catch (RuntimeException re) {
+
+		}
+		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
+		if (this.httpMethod == HttpMethod.GET) {
+			if (resourcePathWithParams.length == 2) {
+				String[] params = resourcePathWithParams[1].split("&");
+				for (String p : params) {
+					this.parameters.add(new Parameter(p));
+				}
+			}
+		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength != -1)) {
+			if (requestString.get(contentStartLine).length() != contentLength) {
+				throw new RuntimeException("Size mismatch between declared content length and actual content length.");
+			}
+			String[] params = requestString.get(contentStartLine).split("&");
+			for (String p : params) {
+				this.parameters.add(new Parameter(p));
 			}
 		}
 	}
@@ -61,14 +90,21 @@ public class RequestMessage implements Request {
 
 	@Override
 	public List<String> getParameterNames() {
-		// TODO Auto-generated method stub
-		return null;
+		List<String> names = new ArrayList<>();
+		for (Parameter hp : this.parameters) {
+			names.add(hp.getName());
+		}
+		return names;
 	}
 
 	@Override
 	public String getParameterValue(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		for (Parameter hp : this.parameters) {
+			if (hp.getName().equals(name)) {
+				return hp.getValue();
+			}
+		}
+		throw new RuntimeException("No such parameter found.");
 	}
 
 }
