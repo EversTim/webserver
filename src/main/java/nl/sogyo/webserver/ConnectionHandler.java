@@ -5,41 +5,42 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ConnectionHandler implements Runnable {
-    private Socket socket;
+	private Socket socket;
 
-    public ConnectionHandler(Socket toHandle) {
-        this.socket = toHandle;
-    }
+	public ConnectionHandler(Socket toHandle) {
+		this.socket = toHandle;
+	}
 
-    public void run() {
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String line = reader.readLine();
-            System.out.println();
+	@Override
+	public void run() {
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+			HttpRequest request;
+			try {
+				request = new HttpRequest(reader);
+			} catch (IOException ie) {
+				return;
+			}
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
+			writer.write(
+					String.format("You did an HTTP %1$S request and you requested the following resource: %2$s.\r\n",
+							request.getHTTPMethod().toString(), request.getResourcePath()));
+			writer.flush();
+			this.socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-            while (!line.isEmpty()) {
-                System.out.println(line);
-                line = reader.readLine();
-            }
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            writer.write("Thank you for connecting!\r\n");
-            writer.flush();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void main(String... args) {
-        try {
-            ServerSocket socket = new ServerSocket(9090);
-            while(true) {
-                Socket newConnection = socket.accept();
-                Thread t = new Thread(new ConnectionHandler(newConnection));
-                t.start();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	public static void main(String... args) {
+		try (ServerSocket socket = new ServerSocket(9090)) {
+			while (true) {
+				Socket newConnection = socket.accept();
+				Thread t = new Thread(new ConnectionHandler(newConnection));
+				t.start();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
