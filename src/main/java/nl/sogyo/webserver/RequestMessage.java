@@ -3,12 +3,21 @@ package nl.sogyo.webserver;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.sogyo.webserver.exceptions.MalformedParameterException;
+import nl.sogyo.webserver.exceptions.MalformedRequestException;
+import nl.sogyo.webserver.exceptions.NoSuchParameterException;
+import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
+
 public class RequestMessage implements Request {
 
 	private HttpMethod httpMethod;
 	private String resourcePath;
 	private List<HeaderParameter> headerParameters = new ArrayList<>();
 	private List<Parameter> parameters = new ArrayList<>();
+
+	public RequestMessage() {
+
+	}
 
 	public RequestMessage(ArrayList<String> requestString) {
 		String[] firstLine = requestString.get(0).split(" ");
@@ -21,20 +30,21 @@ public class RequestMessage implements Request {
 		} else {
 			// This should really be a custom MalformedRequestException or
 			// something like that.
-			throw new RuntimeException("Malformed request.");
+			throw new MalformedRequestException("Malformed request, neither GET or POST.");
 		}
 		// Will not handle spaces in paths gracefully, shouldn't have to (%20).
 		this.resourcePath = resourcePathWithParams[0];
+		if (!this.resourcePath.equals("/")) {
+			// Technically true but not very useful. It works though.
+			// throw new ResourceNotFoundException("No resources exist,
+			// therefore no resource was found.");
+		}
 
 		int curLine = 1;
 		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
 			if ((requestString.get(curLine) != null) && (requestString.get(curLine).trim().length() != 0)) {
-				try {
-					HeaderParameter current = new HeaderParameter(requestString.get(curLine));
-					this.headerParameters.add(current);
-				} catch (RuntimeException ex) {
-					System.out.println("Probably malformed header parameter.");
-				}
+				HeaderParameter current = new HeaderParameter(requestString.get(curLine));
+				this.headerParameters.add(current);
 			}
 		}
 
@@ -42,8 +52,8 @@ public class RequestMessage implements Request {
 		String contentLengthStr = null;
 		try {
 			contentLengthStr = this.getHeaderParameterValue("Content-Length");
-		} catch (RuntimeException re) {
-
+		} catch (NoSuchParameterException nspe) {
+			// THIS SPACE INTENTIONALLY LEFT BLANK
 		}
 		String[] params = new String[0];
 		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
@@ -54,17 +64,14 @@ public class RequestMessage implements Request {
 			}
 		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength > 0)) {
 			if (requestString.get(contentStartLine).length() != contentLength) {
-				throw new RuntimeException("Size mismatch between declared content length and actual content length.");
+				throw new MalformedParameterException(
+						"Size mismatch between declared content length and actual content length.");
 			}
 			params = requestString.get(contentStartLine).split("&");
 		}
 		for (String p : params) {
-			try {
-				Parameter current = new Parameter(p);
-				this.parameters.add(current);
-			} catch (RuntimeException ex) {
-				System.out.println("Probably malformed parameter.");
-			}
+			Parameter current = new Parameter(p);
+			this.parameters.add(current);
 		}
 	}
 
@@ -94,7 +101,7 @@ public class RequestMessage implements Request {
 				return hp.getValue();
 			}
 		}
-		throw new RuntimeException("No such header parameter found.");
+		throw new NoSuchParameterException("No header parameter \"" + name + "\" found.");
 	}
 
 	@Override
@@ -113,7 +120,7 @@ public class RequestMessage implements Request {
 				return hp.getValue();
 			}
 		}
-		throw new RuntimeException("No such parameter found.");
+		throw new NoSuchParameterException("No parameter \"" + name + "\" found.");
 	}
 
 }
