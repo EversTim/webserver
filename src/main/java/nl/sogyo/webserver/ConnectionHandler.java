@@ -35,9 +35,9 @@ public class ConnectionHandler implements Runnable {
 			} catch (RuntimeException re) {
 				statusCode = HttpStatusCode.ServerError;
 			}
-			String responseMessage = this.generateResponseMessage(request, statusCode);
+			String responseMessageBody = this.generateResponseMessageBody(request, statusCode);
 
-			ResponseMessage message = new ResponseMessage(statusCode, responseMessage);
+			ResponseMessage message = new ResponseMessage(statusCode, responseMessageBody);
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
 			writer.write(message.toString());
 			writer.flush();
@@ -64,7 +64,7 @@ public class ConnectionHandler implements Runnable {
 		return incomingMessage;
 	}
 
-	public String generateResponseMessage(RequestMessage request, HttpStatusCode statusCode) {
+	public String generateResponseMessageBody(RequestMessage request, HttpStatusCode statusCode) {
 		StringBuilder responseMessage = new StringBuilder();
 		if (statusCode == HttpStatusCode.OK) {
 			responseMessage.append("<html>\n<body>\n");

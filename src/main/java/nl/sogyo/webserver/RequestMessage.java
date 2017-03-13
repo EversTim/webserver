@@ -28,8 +28,6 @@ public class RequestMessage implements Request {
 		} else if (method.equals("POST")) {
 			this.httpMethod = HttpMethod.POST;
 		} else {
-			// This should really be a custom MalformedRequestException or
-			// something like that.
 			throw new MalformedRequestException("Malformed request, neither GET or POST.");
 		}
 		// Will not handle spaces in paths gracefully, shouldn't have to (%20).
