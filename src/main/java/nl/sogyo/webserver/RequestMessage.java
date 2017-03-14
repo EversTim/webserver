@@ -18,7 +18,7 @@ public class RequestMessage implements Request {
 	private List<HeaderParameter> headerParameters = new ArrayList<>();
 	private List<Parameter> parameters = new ArrayList<>();
 
-	public RequestMessage() {
+	RequestMessage() {
 
 	}
 

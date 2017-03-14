@@ -37,13 +37,28 @@ public class ConnectionHandler implements Runnable {
 			} catch (RuntimeException re) {
 				statusCode = HttpStatusCode.ServerError;
 			}
-			String responseMessageBody = this.generateResponseMessageBody(request, statusCode,
-					request.getContentType());
-			// System.out.println(responseMessageBody);
-			ResponseMessage message = new ResponseMessage(statusCode, responseMessageBody, request.getContentType());
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
-			writer.write(message.toString());
-			writer.flush();
+			ResponseMessage message;
+			if (statusCode == HttpStatusCode.OK) {
+				File responseBody = new File(request.getResourcePath()).getAbsoluteFile();
+				ContentType returnType;
+				if (responseBody.getAbsolutePath().endsWith("jpg")) {
+					returnType = ContentType.IMAGE_JPEG;
+				} else {
+					returnType = request.getContentType();
+				}
+				byte[] contents = Files.readAllBytes(responseBody.toPath());
+				message = new ResponseMessage(statusCode, contents.length, returnType);
+				byte[] byteMessage = message.toString().getBytes("UTF-8");
+				byte[] output = new byte[byteMessage.length + contents.length];
+				System.arraycopy(byteMessage, 0, output, 0, byteMessage.length);
+				System.arraycopy(contents, 0, output, byteMessage.length, contents.length);
+				this.socket.getOutputStream().write(output);
+			} else {
+				message = new ResponseMessage(statusCode, 0, ContentType.NONE);
+				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
+				writer.write(message.toString());
+				writer.close();
+			}
 			this.socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -64,33 +79,7 @@ public class ConnectionHandler implements Runnable {
 			body.append((char) read);
 		}
 		incomingMessage.add(body.toString());
-		for (String s : incomingMessage) {
-			System.out.println(s);
-		}
 		return incomingMessage;
-	}
-
-	public String generateResponseMessageBody(RequestMessage request, HttpStatusCode statusCode,
-			ContentType contentType) {
-		StringBuilder responseMessage = new StringBuilder();
-		File file = new File(request.getResourcePath());
-		if (statusCode == HttpStatusCode.OK) {
-			try (BufferedReader reader = new BufferedReader(new FileReader(file.getAbsolutePath()))) {
-				while (reader.ready()) {
-					int read = reader.read();
-					responseMessage.append((char) read);
-				}
-			} catch (FileNotFoundException fnfe) {
-				// Should never happen, statusCode will be 404.
-				// Log in case it does.
-				System.out.println("File was not found after check for 404!");
-			} catch (IOException ie) {
-				// THIS SPACE INTENTIONALLY LEFT BLANK
-			}
-		} else {
-			responseMessage.append("Something went wrong! " + statusCode.getCode() + " " + statusCode.getDescription());
-		}
-		return responseMessage.toString();
 	}
 
 	public static void main(String... args) {

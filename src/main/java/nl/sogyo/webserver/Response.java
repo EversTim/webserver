@@ -9,7 +9,11 @@ public interface Response {
 
 	ZonedDateTime getDate();
 
-	String getContent();
+	Object getContent();
 
-	void setContent(String content);
+	void setContent(Object content, int contentLength);
+
+	long getContentLength();
+
+	ContentType getType();
 }

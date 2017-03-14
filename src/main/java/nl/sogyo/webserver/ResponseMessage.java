@@ -6,15 +6,17 @@ import java.time.format.DateTimeFormatter;
 public class ResponseMessage implements Response {
 
 	private HttpStatusCode status;
-	private String content;
+	private long contentLength;
 	private ZonedDateTime requestDate;
 	private static final String HTTPVERSION = "HTTP/1.1";
 	private static final String SERVERNAME = "TEvers";
-	private final ContentType type;
+	private ContentType type;
+	private Object content = null;
+	private static final String charset = "charset=UTF-8";
 
-	public ResponseMessage(HttpStatusCode status, String content, ContentType type) {
+	public ResponseMessage(HttpStatusCode status, long contentLength, ContentType type) {
 		this.status = status;
-		this.content = content;
+		this.contentLength = contentLength;
 		this.requestDate = ZonedDateTime.now();
 		this.type = type;
 	}
@@ -35,13 +37,24 @@ public class ResponseMessage implements Response {
 	}
 
 	@Override
-	public String getContent() {
+	public long getContentLength() {
+		return this.contentLength;
+	}
+
+	@Override
+	public Object getContent() {
 		return this.content;
 	}
 
 	@Override
-	public void setContent(String content) {
+	public void setContent(Object content, int contentLength) {
 		this.content = content;
+		this.contentLength = contentLength;
+	}
+
+	@Override
+	public ContentType getType() {
+		return this.type;
 	}
 
 	@Override
@@ -52,10 +65,15 @@ public class ResponseMessage implements Response {
 		build.append("Date: " + this.getDate().format(DateTimeFormatter.RFC_1123_DATE_TIME) + "\n");
 		build.append("Server: " + SERVERNAME + "\n");
 		build.append("Connection: close\n");
-		build.append("Content-Type: " + this.type.getType() + "; charset=UTF-8\n");
-		if (this.getContent().length() != 0) {
-			build.append("Content-Length: " + this.getContent().length() + "\n\n");
-			build.append(this.getContent());
+		if (this.getType() != ContentType.NONE) {
+			build.append("Content-Type: " + this.getType().getType());
+			if (this.getType().getGeneralType().equals("text")) {
+				build.append("; " + charset);
+			}
+			build.append("\n");
+			build.append("Content-Length: " + this.getContentLength());
+			build.append("\n");
+			build.append("\n");
 		}
 		return build.toString();
 	}
