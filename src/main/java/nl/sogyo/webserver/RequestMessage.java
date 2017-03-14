@@ -40,8 +40,6 @@ public class RequestMessage implements Request {
 			this.resourcePath = "index.html";
 		}
 		File resource = new File(this.resourcePath);
-		System.out.println("P: " + resource.getPath());
-		System.out.println("A: " + resource.getAbsolutePath());
 		if (!resource.getAbsolutePath().contains(System.getProperty("user.dir"))) {
 			throw new IllegalFileAccessException();
 		}
