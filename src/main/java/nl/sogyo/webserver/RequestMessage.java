@@ -1,6 +1,5 @@
 package nl.sogyo.webserver;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,8 +7,6 @@ import nl.sogyo.webserver.exceptions.ContentTypeNotAcceptableException;
 import nl.sogyo.webserver.exceptions.MalformedParameterException;
 import nl.sogyo.webserver.exceptions.MalformedRequestException;
 import nl.sogyo.webserver.exceptions.NoSuchParameterException;
-import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
-import nl.sogyo.webserver.exceptions.IllegalFileAccessException;
 
 public class RequestMessage implements Request {
 
@@ -39,13 +36,6 @@ public class RequestMessage implements Request {
 		if (this.resourcePath.equals("")) {
 			this.resourcePath = "index.html";
 		}
-		File resource = new File(this.resourcePath);
-		if (!resource.getAbsolutePath().contains(System.getProperty("user.dir"))) {
-			throw new IllegalFileAccessException();
-		}
-		if (!resource.getAbsoluteFile().exists()) {
-			throw new ResourceNotFoundException(resource.getAbsolutePath());
-		}
 
 		int curLine = 1;
 		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
@@ -70,14 +60,18 @@ public class RequestMessage implements Request {
 			} else {
 				throw new ContentTypeNotAcceptableException("Unknown content type.");
 			}
+		} else {
+			this.contentType = ContentType.NONE;
 		}
 
 		int contentStartLine = curLine + 1;
 		String contentLengthStr = null;
-		try {
-			contentLengthStr = this.getHeaderParameterValue("Content-Length");
-		} catch (NoSuchParameterException nspe) {
-			// THIS SPACE INTENTIONALLY LEFT BLANK
+		if (this.contentType != ContentType.NONE) {
+			try {
+				contentLengthStr = this.getHeaderParameterValue("Content-Length");
+			} catch (NoSuchParameterException nspe) {
+				// THIS SPACE INTENTIONALLY LEFT BLANK
+			}
 		}
 		String[] params = new String[0];
 		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
