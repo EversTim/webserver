@@ -39,14 +39,15 @@ public class ConnectionHandler implements Runnable {
 			}
 			ResponseMessage message;
 			if (statusCode == HttpStatusCode.OK) {
-				File responseBody = new File(request.getResourcePath()).getAbsoluteFile();
-				ContentType returnType;
-				if (responseBody.getAbsolutePath().endsWith("jpg")) {
-					returnType = ContentType.IMAGE_JPEG;
-				} else {
-					returnType = request.getContentType();
+				byte[] contents = new byte[0];
+				ContentType returnType = request.getContentType();
+				if (request.getContentType() != ContentType.NONE) {
+					File responseBody = new File(request.getResourcePath()).getAbsoluteFile();
+					contents = Files.readAllBytes(responseBody.toPath());
+					if (responseBody.getAbsolutePath().endsWith("jpg")) {
+						returnType = ContentType.IMAGE_JPEG;
+					}
 				}
-				byte[] contents = Files.readAllBytes(responseBody.toPath());
 				message = new ResponseMessage(statusCode, contents.length, returnType);
 				byte[] byteMessage = message.toString().getBytes("UTF-8");
 				byte[] output = new byte[byteMessage.length + contents.length];

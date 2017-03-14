@@ -19,7 +19,7 @@ public class RequestMessage implements Request {
 	private List<Parameter> parameters = new ArrayList<>();
 
 	RequestMessage() {
-
+		this.contentType = ContentType.NONE;
 	}
 
 	public RequestMessage(ArrayList<String> requestString) {
