@@ -9,6 +9,7 @@ import nl.sogyo.webserver.exceptions.MalformedParameterException;
 import nl.sogyo.webserver.exceptions.MalformedRequestException;
 import nl.sogyo.webserver.exceptions.NoSuchParameterException;
 import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
+import nl.sogyo.webserver.exceptions.IllegalFileAccessException;
 
 public class RequestMessage implements Request {
 
@@ -39,8 +40,13 @@ public class RequestMessage implements Request {
 			this.resourcePath = "index.html";
 		}
 		File resource = new File(this.resourcePath);
+		System.out.println("P: " + resource.getPath());
+		System.out.println("A: " + resource.getAbsolutePath());
+		if (!resource.getAbsolutePath().contains(System.getProperty("user.dir"))) {
+			throw new IllegalFileAccessException();
+		}
 		if (!resource.getAbsoluteFile().exists()) {
-			throw new ResourceNotFoundException();
+			throw new ResourceNotFoundException(resource.getAbsolutePath());
 		}
 
 		int curLine = 1;

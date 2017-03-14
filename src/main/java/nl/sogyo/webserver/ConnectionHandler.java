@@ -1,6 +1,7 @@
 package nl.sogyo.webserver;
 
 import nl.sogyo.webserver.exceptions.ContentTypeNotAcceptableException;
+import nl.sogyo.webserver.exceptions.IllegalFileAccessException;
 import nl.sogyo.webserver.exceptions.MalformedParameterException;
 import nl.sogyo.webserver.exceptions.MalformedRequestException;
 import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
@@ -32,8 +33,11 @@ public class ConnectionHandler implements Runnable {
 				statusCode = HttpStatusCode.BadRequest;
 			} catch (ResourceNotFoundException rnfe) {
 				statusCode = HttpStatusCode.NotFound;
+				System.out.println(rnfe.getMessage());
 			} catch (ContentTypeNotAcceptableException cntae) {
 				statusCode = HttpStatusCode.NotAcceptable;
+			} catch (IllegalFileAccessException ifae) {
+				statusCode = HttpStatusCode.Forbidden;
 			} catch (RuntimeException re) {
 				statusCode = HttpStatusCode.ServerError;
 			}
