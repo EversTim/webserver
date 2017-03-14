@@ -61,19 +61,19 @@ public class ResponseMessage implements Response {
 	public String toString() {
 		StringBuilder build = new StringBuilder();
 		build.append(HTTPVERSION + " ");
-		build.append(this.status.getCode() + " " + this.status.getDescription() + "\n");
-		build.append("Date: " + this.getDate().format(DateTimeFormatter.RFC_1123_DATE_TIME) + "\n");
-		build.append("Server: " + SERVERNAME + "\n");
-		build.append("Connection: close\n");
+		build.append(this.status.getCode() + " " + this.status.getDescription() + "\r\n");
+		build.append("Date: " + this.getDate().format(DateTimeFormatter.RFC_1123_DATE_TIME) + "\r\n");
+		build.append("Server: " + SERVERNAME + "\r\n");
+		build.append("Connection: close\r\n");
 		if (this.getType() != ContentType.NONE) {
 			build.append("Content-Type: " + this.getType().getType());
 			if (this.getType().getGeneralType().equals("text")) {
 				build.append("; " + charset);
 			}
-			build.append("\n");
+			build.append("\r\n");
 			build.append("Content-Length: " + this.getContentLength());
-			build.append("\n");
-			build.append("\n");
+			build.append("\r\n");
+			build.append("\r\n");
 		}
 		return build.toString();
 	}
