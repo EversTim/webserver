@@ -27,12 +27,14 @@ public class ConnectionHandler implements Runnable {
 			HttpStatusCode statusCode = HttpStatusCode.OK;
 			try {
 				request = new RequestMessage(this.readIncomingMessage(reader));
-				File resource = new File(request.getResourcePath());
-				if (!resource.getAbsolutePath().contains(System.getProperty("user.dir"))) {
-					throw new IllegalFileAccessException();
-				}
-				if (!resource.getAbsoluteFile().exists()) {
-					throw new ResourceNotFoundException(resource.getAbsolutePath());
+				if (request.getContentType() != ContentType.NONE) {
+					File resource = new File(request.getResourcePath());
+					if (!resource.getAbsolutePath().contains(System.getProperty("user.dir"))) {
+						throw new IllegalFileAccessException();
+					}
+					if (!resource.getAbsoluteFile().exists()) {
+						throw new ResourceNotFoundException(resource.getAbsolutePath());
+					}
 				}
 			} catch (MalformedParameterException mpe) {
 				statusCode = HttpStatusCode.BadRequest;
