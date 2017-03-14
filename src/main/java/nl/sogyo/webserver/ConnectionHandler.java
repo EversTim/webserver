@@ -27,56 +27,90 @@ public class ConnectionHandler implements Runnable {
 			HttpStatusCode statusCode = HttpStatusCode.OK;
 			try {
 				request = new RequestMessage(this.readIncomingMessage(reader));
-				if (request.getContentType() != ContentType.NONE) {
-					File resource = new File(request.getResourcePath());
-					if (!resource.getAbsolutePath().contains(System.getProperty("user.dir"))) {
-						throw new IllegalFileAccessException();
-					}
-					if (!resource.getAbsoluteFile().exists()) {
-						throw new ResourceNotFoundException(resource.getAbsolutePath());
-					}
-				}
 			} catch (MalformedParameterException mpe) {
 				statusCode = HttpStatusCode.BadRequest;
 			} catch (MalformedRequestException mre) {
 				statusCode = HttpStatusCode.BadRequest;
-			} catch (ResourceNotFoundException rnfe) {
-				statusCode = HttpStatusCode.NotFound;
-				System.out.println(rnfe.getMessage());
 			} catch (ContentTypeNotAcceptableException cntae) {
 				statusCode = HttpStatusCode.NotAcceptable;
-			} catch (IllegalFileAccessException ifae) {
-				statusCode = HttpStatusCode.Forbidden;
 			} catch (RuntimeException re) {
 				statusCode = HttpStatusCode.ServerError;
 			}
 			ResponseMessage message;
-			if (statusCode == HttpStatusCode.OK) {
-				byte[] contents = new byte[0];
-				ContentType returnType = request.getContentType();
-				if (request.getContentType() != ContentType.NONE) {
-					File responseBody = new File(request.getResourcePath()).getAbsoluteFile();
-					contents = Files.readAllBytes(responseBody.toPath());
-					if (responseBody.getAbsolutePath().endsWith("jpg")) {
-						returnType = ContentType.IMAGE_JPEG;
-					}
+			byte[] contents = new byte[0];
+			ContentType returnType = request.getContentType();
+			if (request.getContentType() != ContentType.NONE) {
+				try {
+					File requested = this.verifyFile(request.getResourcePath());
+					contents = this.setContent(requested);
+					returnType = this.checkSetContentType(returnType, requested);
+				} catch (IllegalFileAccessException ifae) {
+					statusCode = HttpStatusCode.Forbidden;
+				} catch (ResourceNotFoundException rnfe) {
+					statusCode = HttpStatusCode.NotFound;
+				} catch (RuntimeException re) {
+					statusCode = HttpStatusCode.ServerError;
 				}
-				message = new ResponseMessage(statusCode, contents.length, returnType);
-				byte[] byteMessage = message.toString().getBytes("UTF-8");
-				byte[] output = new byte[byteMessage.length + contents.length];
-				System.arraycopy(byteMessage, 0, output, 0, byteMessage.length);
-				System.arraycopy(contents, 0, output, byteMessage.length, contents.length);
-				this.socket.getOutputStream().write(output);
-			} else {
-				message = new ResponseMessage(statusCode, 0, ContentType.NONE);
-				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
-				writer.write(message.toString());
-				writer.close();
 			}
+			message = new ResponseMessage(statusCode, contents.length, returnType);
+			byte[] byteMessage = message.toString().getBytes("UTF-8");
+			byte[] output = new byte[byteMessage.length + contents.length];
+			System.arraycopy(byteMessage, 0, output, 0, byteMessage.length);
+			System.arraycopy(contents, 0, output, byteMessage.length, contents.length);
+			this.socket.getOutputStream().write(output);
 			this.socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private File verifyFile(String path) {
+		File requested = new File(path).getAbsoluteFile();
+		if (!requested.getAbsoluteFile().exists()) {
+			throw new ResourceNotFoundException(requested.getAbsolutePath());
+		} else if (path.matches("[A-Z]:.*")) {
+			throw new ResourceNotFoundException(requested.getAbsolutePath());
+		} else if (!requested.getAbsolutePath().contains(System.getProperty("user.dir"))) {
+			throw new IllegalFileAccessException();
+		}
+		return requested;
+	}
+
+	private byte[] setContent(File requested) throws IOException {
+		if (requested.isFile()) {
+			return Files.readAllBytes(requested.toPath());
+		} else {
+			StringBuilder build = new StringBuilder();
+			build.append("<html>\n");
+			build.append("<head>\n");
+			build.append("<title>\n");
+			build.append("Directory listing of " + requested.getName());
+			build.append("</title>\n");
+			build.append("</head>\n");
+			build.append("<body>\n");
+			build.append("<ul>\n");
+			for (File s : requested.listFiles()) {
+				build.append("<li>");
+				build.append(s.getName());
+				build.append("</li>");
+			}
+			build.append("</ul>\n");
+			build.append("</body>\n");
+			build.append("</html>\n");
+			return build.toString().getBytes("UTF-8");
+		}
+	}
+
+	private ContentType checkSetContentType(ContentType returnType, File responseBody) {
+		String filename = responseBody.getName();
+		if (filename.matches("\\.jpg$")) {
+			returnType = ContentType.IMAGE_JPEG;
+		} else if (filename.matches("\\.css$")) {
+			returnType = ContentType.TEXT_CSS;
+		} else if (filename.endsWith("\\.html?")) {
+			returnType = ContentType.TEXT_HTML;
+		}
+		return returnType;
 	}
 
 	public ArrayList<String> readIncomingMessage(BufferedReader reader) throws IOException {

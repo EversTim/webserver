@@ -7,12 +7,12 @@ public class ResponseMessage implements Response {
 
 	private HttpStatusCode status;
 	private long contentLength;
-	private ZonedDateTime requestDate;
+	private final ZonedDateTime requestDate;
 	private static final String HTTPVERSION = "HTTP/1.1";
-	private static final String SERVERNAME = "TEvers";
+	private static final String SERVERNAME = "DragnServer";
 	private ContentType type;
 	private Object content = null;
-	private static final String charset = "charset=UTF-8";
+	private static final String CHARSET = "charset=UTF-8";
 
 	public ResponseMessage(HttpStatusCode status, long contentLength, ContentType type) {
 		this.status = status;
@@ -68,7 +68,7 @@ public class ResponseMessage implements Response {
 		if (this.getType() != ContentType.NONE) {
 			build.append("Content-Type: " + this.getType().getType());
 			if (this.getType().getGeneralType().equals("text")) {
-				build.append("; " + charset);
+				build.append("; " + CHARSET);
 			}
 			build.append("\r\n");
 			build.append("Content-Length: " + this.getContentLength());

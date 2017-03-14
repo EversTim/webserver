@@ -15,6 +15,7 @@ public class RequestMessage implements Request {
 	private ContentType contentType;
 	private List<HeaderParameter> headerParameters = new ArrayList<>();
 	private List<Parameter> parameters = new ArrayList<>();
+	private int currentReadingLine = 1;
 
 	RequestMessage() {
 		this.contentType = ContentType.NONE;
@@ -37,24 +38,25 @@ public class RequestMessage implements Request {
 			this.resourcePath = "index.html";
 		}
 
-		int curLine = this.extractHeaderParametersAndReturnFinalLine(requestString);
-		this.determineContentType();
+		this.headerParameters = this.extractHeaderParameters(requestString);
+		this.contentType = this.determineContentType();
 
-		int contentStartLine = curLine + 1;
+		this.currentReadingLine++;
 		String contentLengthStr = null;
 		if (this.contentType != ContentType.NONE) {
 			try {
 				contentLengthStr = this.getHeaderParameterValue("Content-Length");
 			} catch (NoSuchParameterException nspe) {
 				// THIS SPACE INTENTIONALLY LEFT BLANK
+				// Will simply not read any content.
 			}
 		}
 		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
-		this.extractParameters(requestString, resourcePathWithParams, contentStartLine, contentLength);
+		this.parameters = this.extractParameters(requestString, resourcePathWithParams, contentLength);
 	}
 
-	private void extractParameters(ArrayList<String> requestString, String[] resourcePathWithParams,
-			int contentStartLine, int contentLength) {
+	private List<Parameter> extractParameters(ArrayList<String> requestString, String[] resourcePathWithParams,
+			int contentLength) {
 		String[] params = new String[0];
 		if (this.httpMethod == HttpMethod.GET) {
 			if (resourcePathWithParams.length == 2) {
@@ -62,47 +64,50 @@ public class RequestMessage implements Request {
 
 			}
 		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength > 0)) {
-			if (requestString.get(contentStartLine).length() != contentLength) {
+			if (requestString.get(this.currentReadingLine).length() != contentLength) {
 				throw new MalformedParameterException(
 						"Size mismatch between declared content length and actual content length.");
 			}
-			params = requestString.get(contentStartLine).split("&");
+			params = requestString.get(this.currentReadingLine).split("&");
 		}
+		List<Parameter> paramList = new ArrayList<>();
 		for (String p : params) {
 			Parameter current = new Parameter(p);
-			this.parameters.add(current);
+			paramList.add(current);
 		}
+		return paramList;
 	}
 
-	private int extractHeaderParametersAndReturnFinalLine(ArrayList<String> requestString) {
-		int curLine = 1;
-		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
-			if ((requestString.get(curLine) != null) && (requestString.get(curLine).trim().length() != 0)) {
-				HeaderParameter current = new HeaderParameter(requestString.get(curLine));
-				this.headerParameters.add(current);
+	private List<HeaderParameter> extractHeaderParameters(ArrayList<String> requestString) {
+		List<HeaderParameter> hParams = new ArrayList<>();
+		for (; (this.currentReadingLine < requestString.size())
+				&& (requestString.get(this.currentReadingLine).trim().length() != 0); this.currentReadingLine++) {
+			if (requestString.get(this.currentReadingLine) != null) {
+				HeaderParameter current = new HeaderParameter(requestString.get(this.currentReadingLine));
+				hParams.add(current);
 			}
 		}
-		return curLine;
+		return hParams;
 	}
 
-	private void determineContentType() {
+	private ContentType determineContentType() {
 		if (this.getHeaderParameterNames().contains("Accept")) {
 			String acceptParam = this.getHeaderParameterValue("Accept");
 			if (acceptParam.contains("text/html")) {
-				this.contentType = ContentType.TEXT_HTML;
+				return ContentType.TEXT_HTML;
 			} else if (acceptParam.contains("text/css")) {
-				this.contentType = ContentType.TEXT_CSS;
+				return ContentType.TEXT_CSS;
 			} else if (acceptParam.contains("image/jpeg")) {
-				this.contentType = ContentType.IMAGE_JPEG;
+				return ContentType.IMAGE_JPEG;
 			} else if (acceptParam.contains("image/*")) {
-				this.contentType = ContentType.IMAGE_JPEG;
+				return ContentType.IMAGE_JPEG;
 			} else if (acceptParam.contains("*/*")) {
-				this.contentType = ContentType.TEXT_HTML;
+				return ContentType.TEXT_HTML;
 			} else {
 				throw new ContentTypeNotAcceptableException("Unknown content type.");
 			}
 		} else {
-			this.contentType = ContentType.NONE;
+			return ContentType.NONE;
 		}
 	}
 
