@@ -1,7 +1,6 @@
 package nl.sogyo.webserver;
 
-import java.util.List;
-
+import nl.sogyo.webserver.exceptions.ContentTypeNotAcceptableException;
 import nl.sogyo.webserver.exceptions.MalformedParameterException;
 import nl.sogyo.webserver.exceptions.MalformedRequestException;
 import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
@@ -9,6 +8,7 @@ import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 public class ConnectionHandler implements Runnable {
@@ -32,12 +32,15 @@ public class ConnectionHandler implements Runnable {
 				statusCode = HttpStatusCode.BadRequest;
 			} catch (ResourceNotFoundException rnfe) {
 				statusCode = HttpStatusCode.NotFound;
+			} catch (ContentTypeNotAcceptableException cntae) {
+				statusCode = HttpStatusCode.NotAcceptable;
 			} catch (RuntimeException re) {
 				statusCode = HttpStatusCode.ServerError;
 			}
-			String responseMessageBody = this.generateResponseMessageBody(request, statusCode);
-
-			ResponseMessage message = new ResponseMessage(statusCode, responseMessageBody);
+			String responseMessageBody = this.generateResponseMessageBody(request, statusCode,
+					request.getContentType());
+			// System.out.println(responseMessageBody);
+			ResponseMessage message = new ResponseMessage(statusCode, responseMessageBody, request.getContentType());
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
 			writer.write(message.toString());
 			writer.flush();
@@ -61,39 +64,38 @@ public class ConnectionHandler implements Runnable {
 			body.append((char) read);
 		}
 		incomingMessage.add(body.toString());
+		for (String s : incomingMessage) {
+			System.out.println(s);
+		}
 		return incomingMessage;
 	}
 
-	public String generateResponseMessageBody(RequestMessage request, HttpStatusCode statusCode) {
+	public String generateResponseMessageBody(RequestMessage request, HttpStatusCode statusCode,
+			ContentType contentType) {
 		StringBuilder responseMessage = new StringBuilder();
+		File file = new File(request.getResourcePath());
 		if (statusCode == HttpStatusCode.OK) {
-			responseMessage.append("<html>\n<body>\n");
-			responseMessage.append(String.format(
-					"You did an HTTP %1$S request.<br />\n You requested the following resource: %2$s.<br />\n",
-					request.getHTTPMethod().toString(), request.getResourcePath()));
-			responseMessage.append("<br />\n");
-			List<String> headerParamNames = request.getHeaderParameterNames();
-			if (headerParamNames.size() != 0) {
-				responseMessage.append("The following header parameters were passed:<br />\n");
-				for (String name : headerParamNames) {
-					responseMessage
-							.append(String.format("%1s: %2s<br />\n", name, request.getHeaderParameterValue(name)));
+			try (BufferedReader reader = new BufferedReader(new FileReader(file.getAbsolutePath()))) {
+				while (reader.ready()) {
+					int read = reader.read();
+					responseMessage.append((char) read);
 				}
-				responseMessage.append("<br />\n");
+			} catch (FileNotFoundException fnfe) {
+				// Should never happen, statusCode will be 404.
+				// Log in case it does.
+				System.out.println("File was not found after check for 404!");
+			} catch (IOException ie) {
+				// THIS SPACE INTENTIONALLY LEFT BLANK
 			}
-			List<String> paramName = request.getParameterNames();
-			if (paramName.size() != 0) {
-				responseMessage.append("The following parameters were passed:<br />\n");
-				for (String name : paramName) {
-					responseMessage.append(String.format("%1s: %2s<br />\n", name, request.getParameterValue(name)));
-				}
-			}
-			responseMessage.append("</body>\n</html>\n");
+		} else {
+			responseMessage.append("Something went wrong! " + statusCode.getCode() + " " + statusCode.getDescription());
 		}
 		return responseMessage.toString();
 	}
 
 	public static void main(String... args) {
+		File directory = new File("var/www").getAbsoluteFile();
+		System.setProperty("user.dir", directory.getAbsolutePath());
 		try (ServerSocket socket = new ServerSocket(9090)) {
 			while (true) {
 				Socket newConnection = socket.accept();

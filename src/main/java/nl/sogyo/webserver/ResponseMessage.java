@@ -10,11 +10,13 @@ public class ResponseMessage implements Response {
 	private ZonedDateTime requestDate;
 	private static final String HTTPVERSION = "HTTP/1.1";
 	private static final String SERVERNAME = "TEvers";
+	private final ContentType type;
 
-	public ResponseMessage(HttpStatusCode status, String content) {
+	public ResponseMessage(HttpStatusCode status, String content, ContentType type) {
 		this.status = status;
 		this.content = content;
 		this.requestDate = ZonedDateTime.now();
+		this.type = type;
 	}
 
 	@Override
@@ -50,7 +52,7 @@ public class ResponseMessage implements Response {
 		build.append("Date: " + this.getDate().format(DateTimeFormatter.RFC_1123_DATE_TIME) + "\n");
 		build.append("Server: " + SERVERNAME + "\n");
 		build.append("Connection: close\n");
-		build.append("Content-Type: text/html; charset=UTF-8\n");
+		build.append("Content-Type: " + this.type.getType() + "; charset=UTF-8\n");
 		if (this.getContent().length() != 0) {
 			build.append("Content-Length: " + this.getContent().length() + "\n\n");
 			build.append(this.getContent());

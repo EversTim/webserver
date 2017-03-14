@@ -1,7 +1,8 @@
 package nl.sogyo.webserver;
 
 public enum HttpStatusCode {
-	OK(200, "OK"), BadRequest(400, "Bad Request"), NotFound(404, "Not Found"), ServerError(500, "Server Error");
+	OK(200, "OK"), BadRequest(400, "Bad Request"), NotFound(404, "Not Found"), NotAcceptable(406,
+			"Not Acceptable"), ServerError(500, "Server Error");
 
 	private int code;
 	private String description;
