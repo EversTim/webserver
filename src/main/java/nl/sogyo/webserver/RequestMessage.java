@@ -37,6 +37,44 @@ public class RequestMessage implements Request {
 			this.resourcePath = "index.html";
 		}
 
+		int curLine = this.extractHeaderParametersAndReturnFinalLine(requestString);
+		this.determineContentType();
+
+		int contentStartLine = curLine + 1;
+		String contentLengthStr = null;
+		if (this.contentType != ContentType.NONE) {
+			try {
+				contentLengthStr = this.getHeaderParameterValue("Content-Length");
+			} catch (NoSuchParameterException nspe) {
+				// THIS SPACE INTENTIONALLY LEFT BLANK
+			}
+		}
+		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
+		this.extractParameters(requestString, resourcePathWithParams, contentStartLine, contentLength);
+	}
+
+	private void extractParameters(ArrayList<String> requestString, String[] resourcePathWithParams,
+			int contentStartLine, int contentLength) {
+		String[] params = new String[0];
+		if (this.httpMethod == HttpMethod.GET) {
+			if (resourcePathWithParams.length == 2) {
+				params = resourcePathWithParams[1].split("&");
+
+			}
+		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength > 0)) {
+			if (requestString.get(contentStartLine).length() != contentLength) {
+				throw new MalformedParameterException(
+						"Size mismatch between declared content length and actual content length.");
+			}
+			params = requestString.get(contentStartLine).split("&");
+		}
+		for (String p : params) {
+			Parameter current = new Parameter(p);
+			this.parameters.add(current);
+		}
+	}
+
+	private int extractHeaderParametersAndReturnFinalLine(ArrayList<String> requestString) {
 		int curLine = 1;
 		for (; (curLine < requestString.size()) && (requestString.get(curLine).trim().length() != 0); curLine++) {
 			if ((requestString.get(curLine) != null) && (requestString.get(curLine).trim().length() != 0)) {
@@ -44,7 +82,10 @@ public class RequestMessage implements Request {
 				this.headerParameters.add(current);
 			}
 		}
+		return curLine;
+	}
 
+	private void determineContentType() {
 		if (this.getHeaderParameterNames().contains("Accept")) {
 			String acceptParam = this.getHeaderParameterValue("Accept");
 			if (acceptParam.contains("text/html")) {
@@ -62,34 +103,6 @@ public class RequestMessage implements Request {
 			}
 		} else {
 			this.contentType = ContentType.NONE;
-		}
-
-		int contentStartLine = curLine + 1;
-		String contentLengthStr = null;
-		if (this.contentType != ContentType.NONE) {
-			try {
-				contentLengthStr = this.getHeaderParameterValue("Content-Length");
-			} catch (NoSuchParameterException nspe) {
-				// THIS SPACE INTENTIONALLY LEFT BLANK
-			}
-		}
-		String[] params = new String[0];
-		int contentLength = contentLengthStr != null ? Integer.parseInt(contentLengthStr) : -1;
-		if (this.httpMethod == HttpMethod.GET) {
-			if (resourcePathWithParams.length == 2) {
-				params = resourcePathWithParams[1].split("&");
-
-			}
-		} else if ((this.httpMethod == HttpMethod.POST) && (contentLength > 0)) {
-			if (requestString.get(contentStartLine).length() != contentLength) {
-				throw new MalformedParameterException(
-						"Size mismatch between declared content length and actual content length.");
-			}
-			params = requestString.get(contentStartLine).split("&");
-		}
-		for (String p : params) {
-			Parameter current = new Parameter(p);
-			this.parameters.add(current);
 		}
 	}
 
