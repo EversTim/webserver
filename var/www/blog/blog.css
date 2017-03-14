@@ -1,0 +1,44 @@
+@import url('../browser_reset.css');
+@import url('../header.css');
+@import url('../main.css');
+
+@charset 'UTF-8';
+
+.postmain {
+	clear: left;
+	line-height: 1.2em;
+}
+
+.poster {
+	margin-bottom: 15px;
+}
+
+.poster > img {
+	height: 2em;
+	float: left;
+	padding-right: 5px;
+}
+
+.poster > h4 > a {
+	position: relative;
+	top: 1em;
+}
+
+.date {
+	font-size: 0.8em;
+	padding: 10px 0px;
+}
+
+.post {
+	font-size: 1em;
+	line-height: 150%;
+}
+
+.readmore > ul {
+	list-style: initial;
+}
+
+.readmore > ul > li {
+	margin-bottom: 1em;
+	font-size: 0.7em;
+}

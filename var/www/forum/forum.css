@@ -1,0 +1,71 @@
+@import url('../browser_reset.css');
+@import url('../header.css');
+@import url('../main.css');
+
+/* Header format is inconsistent, overwriting what I need. */
+#pagetitle {
+	top: -3px;
+	left: -131px;
+}
+
+#navigation {
+	position: relative;
+	top: -32px;
+}
+
+.post {
+	background-color: #ACC0CD;
+	margin: 10px 0px;
+	border-bottom-style: solid;
+	border-bottom-width: 2px;
+	border-bottom-color: #444444;
+	padding: 20px 20px 10px 20px;
+}
+
+.posttitle{
+	font-weight: bold;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-color: 474A68;
+}
+
+.userinfo {
+	position: relative;
+	width: 200px;
+	margin-top: 10px;
+	margin-right: 20px;
+	font-size: 0.8em;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.userinfo > ul > li {
+	list-style: none;
+	padding: 2px 0px;
+	margin-left: -20px;
+}
+
+.avatar {
+	width: 100%;
+	border-radius: 10px;
+}
+
+.username, .postcount, .joindate {
+	font-weight: bold;
+}
+
+.postmain {
+	position: relative;
+	background-color: #BDD1DE;
+	display: inline-block;
+	min-height: 100px;
+	width: 60%;
+	vertical-align: top;
+	padding: 10px 25px;
+	margin: 10px 0px 0px 5px;
+}
+
+.postdate {
+	font-size: 0.8em;
+	line-height: 2em;
+}

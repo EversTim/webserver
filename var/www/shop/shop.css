@@ -1,0 +1,113 @@
+@import url('../browser_reset.css');
+@import url('../header.css');
+@import url('../main.css');
+
+#pagetitle {
+	top: -3px;
+	left: -131px;
+}
+
+#shopheadermenu {
+	position: fixed;
+	left: 60%;
+	top: 0%;
+	z-index: 99;
+}
+
+.shopmenubutton {
+	display: inline-block;
+	background: linear-gradient(#ACD580, #88C248);
+	padding: 10px;
+	border-radius: 5px;
+}
+
+#menu {
+	clear: left;
+	float: left;
+	box-shadow: inset 0px 0px 10px 5px #D2D3D4;
+	border-radius: 10px;
+	display:inline-block;
+	line-height: 2em;
+	width: 180px;
+}
+
+.category {
+	line-height: 1.5em;
+}
+
+.menugroup {
+	margin: 10px;
+}
+
+.menugroup > span + ul {
+	display: none;
+}
+
+.menugroup:hover > span + ul {
+	display: inline-block;
+}
+
+.selected {
+	font-weight: bold;
+}
+
+#shopmain {
+	display:inline-block;
+	width: 70%;
+	padding-left: 20px;
+	line-height: 1.1em;
+}
+
+#currentcategory {
+	font-size: 0.7em;
+	padding-bottom: 10px;
+}
+
+#products {
+	margin-top: 10px;
+}
+
+#products > ul {
+	margin: 0px;
+}
+
+.product {
+	border-style: solid;
+	border-bottom-width: 2px;
+	border-color: #CCCCCC;
+	clear: left;
+	padding: 3px;
+	min-height: 50px;
+	padding: 10px 0px;
+}
+
+.product:hover {
+	background: linear-gradient(#ACD580, #88C248);
+}
+
+.imagestatic {
+	width: 10%;
+	display: inline-block;
+	vertical-align: middle;
+	padding-right: 4px;
+}
+
+.imagemouseover {
+	display: none;
+}
+
+.imagestatic:hover + .imagemouseover {
+	display: block;
+	position: absolute;
+}
+
+.description {
+	display: inline-block;
+	vertical-align: middle;
+	width: 85%
+}
+
+#navigationfooter {
+	line-height: 1.5em;
+	text-align: center;
+}

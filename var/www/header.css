@@ -1,0 +1,62 @@
+#header {
+	padding-top: 30px;
+	min-height: 230px;
+}
+
+#pageicon {
+	float: left;
+	padding-right: 50px;
+}
+
+#pagetitle {
+	position: relative;
+	font-weight: bold;
+	font-size: 2.5em;
+	margin: auto;
+	top: -200px;
+	left: -25px;
+	text-align: center;
+	font-family: serif;
+	color: #0D4050;
+}
+
+#navigation {
+	padding: 60px 0px;
+	margin: auto;
+	width: 100%;
+}
+
+#navbar {
+	display: inline-block;
+	color: black;
+}
+
+#navbar > ul {
+	margin: 0px;
+	padding: 0px;
+}
+
+#navbutton {
+	background-color: #ACC0CD;
+	display: inline-block;
+	float: left;
+	margin: 6px;
+	padding: 8px 9px 8px 9px;
+	margin-bottom: 9px;
+}
+
+#navbutton:hover {
+	border-bottom-style: solid;
+	border-bottom-width: 3px;
+	border-color: #56B4D3;
+	margin-bottom: 6px;
+}
+
+#navbutton > a {
+	color: black;
+}
+
+#searchbar {
+	float: right;
+	margin: 9px 0px;
+}

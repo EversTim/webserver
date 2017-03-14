@@ -1,0 +1,44 @@
+body {
+	width: 850px;
+	margin: 0px auto;
+	padding: 0px;
+	background-color: white;
+	color: black;
+	font-family: sans-serif;
+	font-size: 0.8em;
+}
+
+a {
+	text-decoration: none;
+	color: #27ACDB;
+}
+
+#main {
+	background-color: #EBF3F8;
+	border-left: gray 1px solid;
+	border-right: gray 1px solid;
+	padding: 0px 40px;
+}
+
+h2, h3 {
+	font-family: serif;
+	font-weight: bold;
+	color: #0D4050;
+	margin-bottom: 1em;
+}
+
+h2 {
+	font-size: 2em;
+}
+
+h3 {
+	font-size: 1.3em;
+}
+
+p {
+	margin: 10px 0px;
+}
+
+ul {
+	margin-left: 20px;
+}
