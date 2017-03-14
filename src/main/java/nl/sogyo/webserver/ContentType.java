@@ -1,7 +1,7 @@
 package nl.sogyo.webserver;
 
 public enum ContentType {
-	NONE("none"), TEXT_HTML("text/html"), TEXT_CSS("text/css"), IMAGE_JPEG("image/jpeg");
+	NONE("none/none"), TEXT_HTML("text/html"), TEXT_CSS("text/css"), IMAGE_JPEG("image/jpeg");
 
 	private String type;
 
