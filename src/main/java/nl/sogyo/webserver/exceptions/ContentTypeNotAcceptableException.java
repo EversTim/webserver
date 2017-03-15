@@ -1,6 +1,6 @@
 package nl.sogyo.webserver.exceptions;
 
-public class ContentTypeNotAcceptableException extends RuntimeException {
+public class ContentTypeNotAcceptableException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 

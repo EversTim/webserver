@@ -6,7 +6,7 @@ public class Parameter {
 	private String name;
 	private String value;
 
-	public Parameter(String line) {
+	public Parameter(String line) throws MalformedParameterException {
 		String[] split = line.split("=");
 		if (split.length != 2) {
 			throw new MalformedParameterException("Malformed parameter detected: " + line + ".");

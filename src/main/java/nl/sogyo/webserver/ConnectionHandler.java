@@ -4,6 +4,7 @@ import nl.sogyo.webserver.exceptions.ContentTypeNotAcceptableException;
 import nl.sogyo.webserver.exceptions.IllegalFileAccessException;
 import nl.sogyo.webserver.exceptions.MalformedParameterException;
 import nl.sogyo.webserver.exceptions.MalformedRequestException;
+import nl.sogyo.webserver.exceptions.NoSuchParameterException;
 import nl.sogyo.webserver.exceptions.ResourceNotFoundException;
 
 import java.io.*;
@@ -33,6 +34,8 @@ public class ConnectionHandler implements Runnable {
 				statusCode = HttpStatusCode.BadRequest;
 			} catch (ContentTypeNotAcceptableException cntae) {
 				statusCode = HttpStatusCode.NotAcceptable;
+			} catch (NoSuchParameterException nspe) {
+				statusCode = HttpStatusCode.BadRequest;
 			} catch (RuntimeException re) {
 				statusCode = HttpStatusCode.ServerError;
 			}
@@ -64,7 +67,7 @@ public class ConnectionHandler implements Runnable {
 		}
 	}
 
-	private File verifyFile(String path) {
+	private File verifyFile(String path) throws IllegalFileAccessException, ResourceNotFoundException {
 		File requested = new File(path).getAbsoluteFile();
 		if (!requested.getAbsoluteFile().exists()) {
 			throw new ResourceNotFoundException(requested.getAbsolutePath());

@@ -21,7 +21,8 @@ public class RequestMessage implements Request {
 		this.contentType = ContentType.NONE;
 	}
 
-	public RequestMessage(ArrayList<String> requestString) {
+	public RequestMessage(ArrayList<String> requestString) throws ContentTypeNotAcceptableException,
+			MalformedParameterException, MalformedRequestException, NoSuchParameterException {
 		String[] firstLine = requestString.get(0).split(" ");
 		String method = firstLine[0];
 		String[] resourcePathWithParams = firstLine[1].split("\\?");
@@ -56,7 +57,7 @@ public class RequestMessage implements Request {
 	}
 
 	private List<Parameter> extractParameters(ArrayList<String> requestString, String[] resourcePathWithParams,
-			int contentLength) {
+			int contentLength) throws MalformedParameterException {
 		String[] params = new String[0];
 		if (this.httpMethod == HttpMethod.GET) {
 			if (resourcePathWithParams.length == 2) {
@@ -90,7 +91,7 @@ public class RequestMessage implements Request {
 		return hParams;
 	}
 
-	private ContentType determineContentType() {
+	private ContentType determineContentType() throws ContentTypeNotAcceptableException, NoSuchParameterException {
 		if (this.getHeaderParameterNames().contains("Accept")) {
 			String acceptParam = this.getHeaderParameterValue("Accept");
 			if (acceptParam.contains("text/html")) {
@@ -131,7 +132,7 @@ public class RequestMessage implements Request {
 	}
 
 	@Override
-	public String getHeaderParameterValue(String name) {
+	public String getHeaderParameterValue(String name) throws NoSuchParameterException {
 		for (HeaderParameter hp : this.headerParameters) {
 			if (hp.getName().equals(name)) {
 				return hp.getValue();
@@ -150,7 +151,7 @@ public class RequestMessage implements Request {
 	}
 
 	@Override
-	public String getParameterValue(String name) {
+	public String getParameterValue(String name) throws NoSuchParameterException {
 		for (Parameter hp : this.parameters) {
 			if (hp.getName().equals(name)) {
 				return hp.getValue();
