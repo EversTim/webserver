@@ -60,7 +60,9 @@ public class ConnectionHandler implements Runnable {
 			byte[] output = new byte[byteMessage.length + contents.length];
 			System.arraycopy(byteMessage, 0, output, 0, byteMessage.length);
 			System.arraycopy(contents, 0, output, byteMessage.length, contents.length);
-			this.socket.getOutputStream().write(output);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			baos.write(output);
+			baos.writeTo(this.socket.getOutputStream());
 			this.socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
